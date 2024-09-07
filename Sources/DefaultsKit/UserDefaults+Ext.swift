@@ -6,132 +6,146 @@
 
 import Foundation
 
+// MARK: - Setting Values
+
 public extension UserDefaults {
-
-	/// Stores a value in UserDefaults.
-	///
-	/// - Parameters:
-	///   - value: The value to store.
-	///   - key: The key to associate the value with.
-	func set<Value>(_ value: Value, for key: UserDefaultsKeyRepresentable) {
-		self.set(value, forKey: key.value)
-	}
-
-	/// Removes a value associated with a key in UserDefaults.
-	///
-	/// - Parameter key: The key for which to remove the value.
-	func remove(for key: UserDefaultsKeyRepresentable) {
-		self.removeObject(forKey: key.value)
-	}
-
-	/// Registers a dictionary of default values.
-	///
-	/// - Parameter dictionary: A dictionary containing the default values.
-	func register<T: UserDefaultsKeyRepresentable>(defaults dictionary: [T: Any]) {
-		let mappedDictionary = dictionary.reduce(into: [String: Any]()) { result, element in
-			result[element.key.value] = element.value
-		}
-		self.register(defaults: mappedDictionary)
-	}
-
-	/// Retrieve a Bool value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The Bool value for the key, or `false` if not found.
-	func bool(for key: UserDefaultsKeyRepresentable) -> Bool {
-		self.bool(forKey: key.value)
-	}
-
-	/// Retrieve an Integer value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The Integer value for the key, or `0` if not found.
-	func integer(for key: UserDefaultsKeyRepresentable) -> Int {
-		self.integer(forKey: key.value)
-	}
-
-	/// Retrieve a Float value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The Float value for the key, or `0.0` if not found.
-	func float(for key: UserDefaultsKeyRepresentable) -> Float {
-		self.float(forKey: key.value)
-	}
-
-    /// Retrieve a Double value for a given key.
+    
+    /// Stores a value in UserDefaults.
     ///
-    /// - Parameter key: The key to look up.
-    /// - Returns: The Double value for the key, or `0.0` if not found.
-    func double(for key: UserDefaultsKeyRepresentable) -> Double {
+    /// - Parameters:
+    ///   - value: The value to store.
+    ///   - key: The key to associate the value with.
+    func set<Value>(_ value: Value, for key: any UserDefaultsKeyRepresentable) {
+        self.set(value, forKey: key.value)
+    }
+    
+    /// Removes a value associated with a key in UserDefaults.
+    ///
+    /// - Parameter key: The key for which to remove the value.
+    func remove(for key: any UserDefaultsKeyRepresentable) {
+        self.removeObject(forKey: key.value)
+    }
+}
+
+// MARK: - Getting Values
+
+public extension UserDefaults {
+    
+    /// Retrieve a Bool value for a given key.
+    func bool(for key: any UserDefaultsKeyRepresentable) -> Bool {
+        self.bool(forKey: key.value)
+    }
+    
+    /// Retrieve an Integer value for a given key.
+    func integer(for key: any UserDefaultsKeyRepresentable) -> Int {
+        self.integer(forKey: key.value)
+    }
+    
+    /// Retrieve a Float value for a given key.
+    func float(for key: any UserDefaultsKeyRepresentable) -> Float {
+        self.float(forKey: key.value)
+    }
+    
+    /// Retrieve a Double value for a given key.
+    func double(for key: any UserDefaultsKeyRepresentable) -> Double {
         self.double(forKey: key.value)
     }
+    
+    /// Retrieve a String value for a given key.
+    func string(for key: any UserDefaultsKeyRepresentable) -> String? {
+        self.string(forKey: key.value)
+    }
+    
+    /// Retrieve a Data value for a given key.
+    func data(for key: any UserDefaultsKeyRepresentable) -> Data? {
+        self.data(forKey: key.value)
+    }
+    
+    /// Retrieve a URL value for a given key.
+    func url(for key: any UserDefaultsKeyRepresentable) -> URL? {
+        self.url(forKey: key.value)
+    }
+    
+    /// Retrieve a generic value for a given key.
+    func value<Value>(for key: any UserDefaultsKeyRepresentable) -> Value? {
+        self.value(forKey: key.value) as? Value
+    }
+    
+    /// Retrieve an array for a given key.
+    func array<Value>(for key: any UserDefaultsKeyRepresentable) -> [Value]? {
+        self.array(forKey: key.value) as? [Value]
+    }
+    
+    /// Retrieve a dictionary for a given key.
+    func dictionary(for key: any UserDefaultsKeyRepresentable) -> [String: Any]? {
+        self.dictionary(forKey: key.value)
+    }
+}
 
-	/// Retrieve a String value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The String value for the key, or `nil` if not found.
-	func string(for key: UserDefaultsKeyRepresentable) -> String? {
-		self.string(forKey: key.value)
-	}
+// MARK: - Setup Methods
 
-	/// Retrieve a Data value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The Data value for the key, or `nil` if not found.
-	func data(for key: UserDefaultsKeyRepresentable) -> Data? {
-		self.data(forKey: key.value)
-	}
+public extension UserDefaults {
+    
+    /// Registers a dictionary of default values with optional reset functionality.
+    ///
+    /// - Parameters:
+    ///   - dictionary: A dictionary containing the default values.
+    ///   - reset: Whether to reset all existing keys before registering new defaults.
+    ///   Defaults to `false`.
+    func register<T: UserDefaultsKeyRepresentable>(defaults dictionary: [T: Any], reset: Bool = false) {
+        if reset {
+            deleteAll() // Remove all existing keys before registering defaults
+        }
+        let mappedDictionary = dictionary.reduce(into: [String: Any]()) { result, element in
+            result[element.key.value] = element.value
+        }
+        self.register(defaults: mappedDictionary)
+    }
+}
 
-	/// Retrieve a URL value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The URL value for the key, or `nil` if not found.
-	func url(for key: UserDefaultsKeyRepresentable) -> URL? {
-		self.url(forKey: key.value)
-	}
+// MARK: - Encoding/Decoding Methods
 
-	/// Retrieve a generic value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The generic value for the key, or `nil` if not found or if the type does not match.
-	func value<Value>(for key: UserDefaultsKeyRepresentable) -> Value? {
-		self.value(forKey: key.value) as? Value
-	}
+public extension UserDefaults {
+    
+    /// Encodes a value and stores it in UserDefaults.
+    func encode<Value: Encodable>(_ value: Value, for key: any UserDefaultsKeyRepresentable) throws {
+        let data = try JSONEncoder().encode(value)
+        self.set(data, for: key)
+    }
+    
+    /// Decodes and retrieves a value for a given key.
+    func decode<T: Decodable>(for key: any UserDefaultsKeyRepresentable) throws -> T? {
+        guard let data = self.data(for: key) else { return nil }
+        return try JSONDecoder().decode(T.self, from: data)
+    }
+}
 
-	/// Retrieve an array for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The array for the key, or `nil` if not found or if the type does not match.
-	func array<Value>(for key: UserDefaultsKeyRepresentable) -> [Value]? {
-		self.array(forKey: key.value) as? [Value]
-	}
+// MARK: - Utility Methods
 
-	/// Retrieve a dictionary for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The dictionary for the key, or `nil` if not found.
-	func dictionary(for key: UserDefaultsKeyRepresentable) -> [String: Any]? {
-		self.dictionary(forKey: key.value)
-	}
-
-	/// Encodes a value and stores it in UserDefaults.
-	///
-	/// - Parameters:
-	///   - value: The Encodable value to store.
-	///   - key: The key to associate the value with.
-	/// - Throws: Throws an error if unable to encode the value.
-	func encode<Value: Encodable>(_ value: Value, for key: UserDefaultsKeyRepresentable) throws {
-		let data = try JSONEncoder().encode(value)
-		self.set(data, for: key)
-	}
-
-	/// Decodes and retrieves a value for a given key.
-	///
-	/// - Parameter key: The key to look up.
-	/// - Returns: The Decodable value associated with the key, if found.
-	/// - Throws: Throws an error if unable to decode the value.
-	func decode<T : Decodable>(for key: UserDefaultsKeyRepresentable) throws -> T? {
-		guard let data = self.data(for: key) else { return nil }
-		return try JSONDecoder().decode(T.self, from: data)
-	}
+public extension UserDefaults {
+    
+    /// Prints all UserDefaults keys and values, filtered by a specified or default prefix.
+    ///
+    /// - Parameter prefixOption: An optional prefix to filter keys, defaulting to `.internalIdentifier`.
+    func printAll(withPrefix prefixOption: UserDefaultsPrefix = .internalIdentifier) {
+        let prefix = prefixOption.prefix
+        let defaults = self.dictionaryRepresentation()
+        let filtered = defaults.filter { key, _ in key.hasPrefix(prefix) }
+        filtered.forEach { key, value in
+            print("\(key): \(value)")
+        }
+    }
+    
+    /// Deletes all UserDefaults keys, filtered by a specified or default prefix.
+    ///
+    /// - Parameter prefixOption: An optional prefix to filter keys, defaulting to `.internalIdentifier`.
+    func deleteAll(withPrefix prefixOption: UserDefaultsPrefix = .internalIdentifier) {
+        let prefix = prefixOption.prefix
+        let allKeys = self.dictionaryRepresentation().keys
+        allKeys.forEach { key in
+            if key.hasPrefix(prefix) {
+                self.removeObject(forKey: key)
+            }
+        }
+    }
 }

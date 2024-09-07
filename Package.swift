@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 
 import PackageDescription
 
@@ -22,7 +22,8 @@ let package = Package(
         .target(
             name: "DefaultsKit",
             dependencies: [],
-            exclude: []
+            exclude: [],
+            swiftSettings: [.enableExperimentalFeature("StrictConcurrency")]
         )
     ]
 )
