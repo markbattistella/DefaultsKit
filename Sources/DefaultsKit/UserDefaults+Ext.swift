@@ -60,7 +60,12 @@ public extension UserDefaults {
     func data(for key: any UserDefaultsKeyRepresentable) -> Data? {
         self.data(forKey: key.value)
     }
-    
+
+    // Retrieve a Date value for a given key.
+    func date(for key: any UserDefaultsKeyRepresentable) -> Date? {
+        self.object(forKey: key.value) as? Date
+    }
+
     /// Retrieve a URL value for a given key.
     func url(for key: any UserDefaultsKeyRepresentable) -> URL? {
         self.url(forKey: key.value)
