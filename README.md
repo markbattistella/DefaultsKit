@@ -1,6 +1,6 @@
 <div align="center">
 
-**# DefaultsKit
+# DefaultsKit
 
 ![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmarkbattistella%2FDefaultsKit%2Fbadge%3Ftype%3Dswift-versions)
 
