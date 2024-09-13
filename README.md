@@ -1,4 +1,14 @@
-# DefaultsKit
+<div align="center">
+
+**# DefaultsKit
+
+![Swift Versions](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmarkbattistella%2FDefaultsKit%2Fbadge%3Ftype%3Dswift-versions)
+
+![Platforms](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fmarkbattistella%2FDefaultsKit%2Fbadge%3Ftype%3Dplatforms)
+
+![Licence](https://img.shields.io/badge/Licence-MIT-white?labelColor=blue&style=flat)
+
+</div>
 
 `DefaultsKit` is a Swift package that provides a clean and type-safe way to manage `UserDefaults` keys and values. It introduces an extensible protocol for keys and convenient utilities for storing, retrieving, and managing preferences using a consistent prefix strategy.
 
