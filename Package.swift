@@ -23,6 +23,7 @@ let package = Package(
             name: "DefaultsKit",
             dependencies: [],
             exclude: [],
+            resources: [.copy("PrivacyInfo.xcprivacy")],
             swiftSettings: [.enableExperimentalFeature("StrictConcurrency")]
         )
     ]
