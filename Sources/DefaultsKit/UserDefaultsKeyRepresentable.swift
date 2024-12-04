@@ -6,21 +6,35 @@
 
 import Foundation
 
-/// A protocol that represents a key used in `UserDefaults` with a raw string value.
-///
-/// Conforming types must have a `RawValue` of type `String` and provide a `value` property
-/// that returns the full key string used for accessing `UserDefaults`.
+/// A protocol that represents a key used in `UserDefaults` with a raw string value. Conforming
+/// types must have a `RawValue` of type `String` and provide a `value` property that returns the
+/// full key string used for accessing `UserDefaults`.
 public protocol UserDefaultsKeyRepresentable: RawRepresentable where RawValue == String {
-    
-    /// The full key string used in `UserDefaults`, combining the bundle identifier (if available)
-    /// with the raw string value of the conforming type.
-    var value: String { get }
+
+    /// The suite name for the `UserDefaults` instance, defaulting to nil for `.standard`.
+    static var suiteName: String? { get }
 }
 
-public extension UserDefaultsKeyRepresentable {
-    
+// MARK: - Default values
+
+extension UserDefaultsKeyRepresentable {
+
+    /// Default suite name is nil, meaning `.standard`.
+    public static var suiteName: String? {
+        return nil
+    }
+
     /// The formatted string value for the key, using the determined prefix.
-    var value: String {
-        return "\(UserDefaultsPrefix.internalIdentifier.prefix)\(self.rawValue)"
+    internal var value: String {
+        return "\(Self.prefix)\(self.rawValue)"
+    }
+
+    /// The default prefix based on the bundle identifier or fallback string.
+    internal static var prefix: String {
+        if let identifier = Bundle.main.bundleIdentifier {
+            return "\(identifier).userDefaults."
+        } else {
+            return "defaultsKit.userDefaults."
+        }
     }
 }

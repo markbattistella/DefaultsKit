@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD033 MD041 -->
 <div align="center">
 
 # DefaultsKit
@@ -14,13 +15,13 @@
 
 ## Features
 
-- **Type-safe UserDefaults Keys:** Use enums conforming to `UserDefaultsKeyRepresentable` to define keys with automatic prefix handling.
-- **Property Wrappers:**
+- **Type-safe `UserDefaults` Keys:** Use enums conforming to `UserDefaultsKeyRepresentable` to define keys with automatic prefix handling.
+- Property Wrappers:
   - `@DefaultsPersisted`: A powerful property wrapper for any `Codable` type with built-in support for primitives and optionals
-  - `@AppStorage`: Enhanced SwiftUI integration with type-safe keys for common types
-- **Prefix Management:** Supports internal bundle identifiers or custom prefixes via the `UserDefaultsPrefix` enum
+  - `@AppStorage:` Enhanced SwiftUI integration with type-safe keys for common types
+- **Prefix Management:** Supports internal bundle identifiers or custom prefixes via the `UserDefaultsKeyRepresentable` protocol.
 - **Utility Functions:** Includes methods for setting, getting, printing, and deleting `UserDefaults` entries
-- **Codable Support:** Automatic encoding/decoding for complex types
+- **`Codable` Support:** Automatic encoding/decoding for complex types
 
 ## Installation
 
@@ -28,7 +29,7 @@ Add `DefaultsKit` to your Swift project using Swift Package Manager.
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/markbattistella/DefaultsKit", from: "2.0.0")
+  .package(url: "https://github.com/markbattistella/DefaultsKit", from: "1.0.0")
 ]
 ```
 
@@ -73,9 +74,6 @@ struct ContentView: View {
     @AppStorage(UserDefaultsKeys.userPreference)
     var isEnabled: Bool = false
     
-    @AppStorage(UserDefaultsKeys.appTheme)
-    var theme: String = "light"
-    
     var body: some View {
         Toggle("Enable Feature", isOn: $isEnabled)
     }
@@ -117,18 +115,14 @@ UserDefaults.standard.register(
 ### Helper methods
 
 ```swift
-// Print all values
-UserDefaults.standard.printAll()
+// Print all values from the UserDefaultsKeys enum
+UserDefaults.printAll(from: UserDefaultsKeys.self)
 
-// Delete all values
-UserDefaults.standard.deleteAll()
-
-// Use the internal bundle identifier
-UserDefaults.standard.printAll(withPrefix: .internalIdentifier)
-
-// Use custom prefix
-UserDefaults.standard.printAll(withPrefix: .custom("custom.prefix."))
+// Delete all values in the UserDefaultsKeys enum
+UserDefaults.deleteAll(from: UserDefaultsKeys.self)
 ```
+
+Using it this way allows you to segregate different `UserDefaultsKeyRepresentable` enums, and print or delete them.
 
 ## License
 

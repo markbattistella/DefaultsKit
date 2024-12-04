@@ -6,7 +6,7 @@
 
 import Foundation
 
-// MARK: - Setting Values
+// MARK: - Setting
 
 extension UserDefaults {
 
@@ -18,6 +18,11 @@ extension UserDefaults {
     public func set<Value>(_ value: Value, for key: any UserDefaultsKeyRepresentable) {
         self.set(value, forKey: key.value)
     }
+}
+
+// MARK: - Deletion
+
+extension UserDefaults {
 
     /// Removes a value associated with a key in UserDefaults.
     ///
@@ -87,35 +92,16 @@ extension UserDefaults {
     }
 }
 
-// MARK: - Setup Methods
-
-extension UserDefaults {
-
-    /// Registers a dictionary of default values with optional reset functionality.
-    ///
-    /// - Parameters:
-    ///   - dictionary: A dictionary containing the default values.
-    ///   - reset: Whether to reset all existing keys before registering new defaults.
-    ///   Defaults to `false`.
-    public func register<T: UserDefaultsKeyRepresentable>(
-        defaults dictionary: [T: Any],
-        reset: Bool = false
-    ) {
-        if reset {
-            deleteAll()
-        }
-        let mappedDictionary = dictionary.reduce(into: [String: Any]()) { result, element in
-            result[element.key.value] = element.value
-        }
-        self.register(defaults: mappedDictionary)
-    }
-}
-
-// MARK: - Encoding/Decoding Methods
+// MARK: - Encoding / Decoding Methods
 
 extension UserDefaults {
 
     /// Encodes a value and stores it in UserDefaults.
+    ///
+    /// - Parameters:
+    ///   - value: The value to encode and store.
+    ///   - key: The key to associate with the encoded value.
+    /// - Throws: An error if encoding fails.
     public func encode<Value: Encodable>(
         _ value: Value,
         for key: any UserDefaultsKeyRepresentable
@@ -125,9 +111,36 @@ extension UserDefaults {
     }
 
     /// Decodes and retrieves a value for a given key.
-    public func decode<T: Decodable>(for key: any UserDefaultsKeyRepresentable) throws -> T? {
+    ///
+    /// - Parameter key: The key associated with the desired value.
+    /// - Throws: An error if decoding fails.
+    /// - Returns: The decoded value for the given key, or `nil` if the key does not exist.
+    public func decode<T: Decodable>(
+        for key: any UserDefaultsKeyRepresentable
+    ) throws -> T? {
         guard let data = self.data(for: key) else { return nil }
         return try JSONDecoder().decode(T.self, from: data)
+    }
+}
+
+// MARK: - Setup Methods
+
+extension UserDefaults {
+
+    /// Registers default values for UserDefaults keys.
+    ///
+    /// - Parameters:
+    ///   - defaults: A dictionary containing the default values to register.
+    ///   - reset: If true, all keys will be deleted before registering the defaults.
+    public func register<T: UserDefaultsKeyRepresentable>(
+        defaults dictionary: [T: Any],
+        reset: Bool = false
+    ) {
+        if reset { dictionary.keys.forEach { remove(for: $0) } }
+        let mappedDictionary = dictionary.reduce(into: [String: Any]()) { result, element in
+            result[element.key.value] = element.value
+        }
+        self.register(defaults: mappedDictionary)
     }
 }
 
@@ -135,27 +148,68 @@ extension UserDefaults {
 
 extension UserDefaults {
 
-    /// Prints all UserDefaults keys and values, filtered by a specified or default prefix.
+    /// Prints all keys and values from a specified UserDefaults suite that match a prefix.
     ///
-    /// - Parameter prefixOption: An optional prefix to filter keys, defaulting to `.internalIdentifier`.
-    public func printAll(withPrefix prefixOption: UserDefaultsPrefix = .internalIdentifier) {
-        let prefix = prefixOption.prefix
-        let defaults = self.dictionaryRepresentation()
-        let filtered = defaults.filter { key, _ in key.hasPrefix(prefix) }
-        filtered.forEach { key, value in
-            print("\(key): \(value)")
+    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
+    /// the desired suite.
+    public static func printAll<T: UserDefaultsKeyRepresentable>(from suiteType: T.Type) {
+        processAllKeys(from: suiteType) { userDefaults, key in
+            print("\(key): \(userDefaults.value(forKey: key) ?? "nil")")
         }
     }
 
-    /// Deletes all UserDefaults keys, filtered by a specified or default prefix.
+    /// Deletes all keys from a specified UserDefaults suite that match a prefix.
     ///
-    /// - Parameter prefixOption: An optional prefix to filter keys, defaulting to `.internalIdentifier`.
-    public func deleteAll(withPrefix prefixOption: UserDefaultsPrefix = .internalIdentifier) {
-        let prefix = prefixOption.prefix
-        let allKeys = self.dictionaryRepresentation().keys
+    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
+    /// the desired suite.
+    public static func deleteAll<T: UserDefaultsKeyRepresentable>(from suiteType: T.Type) {
+        processAllKeys(from: suiteType) { userDefaults, key in
+            userDefaults.removeObject(forKey: key)
+        }
+    }
+}
+
+// MARK: - Helper methods
+
+extension UserDefaults {
+
+    /// Retrieves the correct `UserDefaults` instance for the specified suite type.
+    ///
+    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
+    /// the desired suite.
+    /// - Returns: The `UserDefaults` instance for the given suite type, or `nil` if it could not
+    /// be retrieved.
+    private static func getUserDefaultsInstance<T: UserDefaultsKeyRepresentable>(
+        from suiteType: T.Type
+    ) -> UserDefaults? {
+        let suiteName = suiteType.suiteName
+        let userDefaults: UserDefaults? = suiteName == nil ? .standard : .init(suiteName: suiteName)
+        guard let userDefaultsInstance = userDefaults else {
+            assertionFailure(
+                "Unable to retrieve UserDefaults for suite: \(suiteName ?? "standard")"
+            )
+            return nil
+        }
+        return userDefaultsInstance
+    }
+
+    /// Processes all keys from a specified UserDefaults suite that match a prefix.
+    ///
+    /// - Parameters:
+    ///   - suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing the
+    ///   desired suite.
+    ///   - process: A closure to execute for each matching key, providing the `UserDefaults`
+    ///   instance and the key.
+    private static func processAllKeys<T: UserDefaultsKeyRepresentable>(
+        from suiteType: T.Type,
+        process: (UserDefaults, String) -> Void
+    ) {
+        guard let userDefaultsInstance = getUserDefaultsInstance(from: suiteType) else { return }
+        let prefix = T.prefix
+        let allKeys = userDefaultsInstance.dictionaryRepresentation().keys
         allKeys.forEach { key in
             if key.hasPrefix(prefix) {
-                self.removeObject(forKey: key)
+                process(userDefaultsInstance, key)
             }
         }
     }
