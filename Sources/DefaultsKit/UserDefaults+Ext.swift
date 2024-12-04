@@ -127,45 +127,58 @@ extension UserDefaults {
 
 extension UserDefaults {
 
-    /// Registers default values for UserDefaults keys.
-    ///
-    /// - Parameters:
-    ///   - defaults: A dictionary containing the default values to register.
-    ///   - reset: If true, all keys will be deleted before registering the defaults.
     public func register<T: UserDefaultsKeyRepresentable>(
-        defaults dictionary: [T: Any],
+        defaults: [T: Any],
         reset: Bool = false
     ) {
-        if reset { dictionary.keys.forEach { remove(for: $0) } }
-        let mappedDictionary = dictionary.reduce(into: [String: Any]()) { result, element in
-            result[element.key.value] = element.value
+        guard let userDefaultsInstance = UserDefaults.getUserDefaultsInstance(from: T.self) else {
+            return
         }
-        self.register(defaults: mappedDictionary)
+        if reset {
+            UserDefaults.removeKeys(Array(defaults.keys), from: userDefaultsInstance)
+        }
+        var prefixedDefaults: [String: Any] = [:]
+        defaults.forEach { key, value in
+            prefixedDefaults[key.value] = value
+        }
+        userDefaultsInstance.register(defaults: prefixedDefaults)
     }
 }
 
-// MARK: - Utility Methods
+// MARK: - Utility Methods - Print
 
 extension UserDefaults {
 
-    /// Prints all keys and values from a specified UserDefaults suite that match a prefix.
-    ///
-    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
-    /// the desired suite.
-    public static func printAll<T: UserDefaultsKeyRepresentable>(from suiteType: T.Type) {
-        processAllKeys(from: suiteType) { userDefaults, key in
-            print("\(key): \(userDefaults.value(forKey: key) ?? "nil")")
+    public static func printKeys<T: UserDefaultsKeyRepresentable>(of type: T.Type) {
+        processAllKeys(from: type) { userDefaultsInstance, key in
+            if let value = userDefaultsInstance.object(forKey: key) {
+                print("\(key): \(value)")
+            }
         }
     }
 
-    /// Deletes all keys from a specified UserDefaults suite that match a prefix.
-    ///
-    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
-    /// the desired suite.
-    public static func deleteAll<T: UserDefaultsKeyRepresentable>(from suiteType: T.Type) {
-        processAllKeys(from: suiteType) { userDefaults, key in
-            userDefaults.removeObject(forKey: key)
+    public static func printKeys<T: UserDefaultsKeyRepresentable>(_ keys: [T]) {
+        guard let userDefaultsInstance = getUserDefaultsInstance(from: T.self) else { return }
+        keys.forEach { key in
+            if let value = userDefaultsInstance.object(forKey: key.value) {
+                print("\(key.value): \(value)")
+            }
         }
+    }
+}
+
+// MARK: - Utility Methods - Delete
+
+extension UserDefaults {
+    public static func deleteKeys<T: UserDefaultsKeyRepresentable>(of type: T.Type) {
+        processAllKeys(from: type) { userDefaultsInstance, key in
+            userDefaultsInstance.removeObject(forKey: key)
+        }
+    }
+
+    public static func deleteKeys<T: UserDefaultsKeyRepresentable>(_ keys: [T]) {
+        guard let userDefaultsInstance = getUserDefaultsInstance(from: T.self) else { return }
+        removeKeys(keys, from: userDefaultsInstance)
     }
 }
 
@@ -173,33 +186,16 @@ extension UserDefaults {
 
 extension UserDefaults {
 
-    /// Retrieves the correct `UserDefaults` instance for the specified suite type.
-    ///
-    /// - Parameter suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing
-    /// the desired suite.
-    /// - Returns: The `UserDefaults` instance for the given suite type, or `nil` if it could not
-    /// be retrieved.
     private static func getUserDefaultsInstance<T: UserDefaultsKeyRepresentable>(
         from suiteType: T.Type
     ) -> UserDefaults? {
-        let suiteName = suiteType.suiteName
-        let userDefaults: UserDefaults? = suiteName == nil ? .standard : .init(suiteName: suiteName)
-        guard let userDefaultsInstance = userDefaults else {
-            assertionFailure(
-                "Unable to retrieve UserDefaults for suite: \(suiteName ?? "standard")"
-            )
-            return nil
+        if let suiteName = suiteType.suiteName {
+            return UserDefaults(suiteName: suiteName)
+        } else {
+            return .standard
         }
-        return userDefaultsInstance
     }
 
-    /// Processes all keys from a specified UserDefaults suite that match a prefix.
-    ///
-    /// - Parameters:
-    ///   - suiteType: The type conforming to `UserDefaultsKeyRepresentable` representing the
-    ///   desired suite.
-    ///   - process: A closure to execute for each matching key, providing the `UserDefaults`
-    ///   instance and the key.
     private static func processAllKeys<T: UserDefaultsKeyRepresentable>(
         from suiteType: T.Type,
         process: (UserDefaults, String) -> Void
@@ -211,6 +207,15 @@ extension UserDefaults {
             if key.hasPrefix(prefix) {
                 process(userDefaultsInstance, key)
             }
+        }
+    }
+
+    private static func removeKeys<T: UserDefaultsKeyRepresentable>(
+        _ keys: [T],
+        from userDefaultsInstance: UserDefaults
+    ) {
+        keys.forEach { key in
+            userDefaultsInstance.removeObject(forKey: key.value)
         }
     }
 }
