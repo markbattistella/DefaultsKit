@@ -53,7 +53,7 @@ extension UserDefaultsKeyRepresentable {
         } else if let identifier = Bundle.main.bundleIdentifier {
             prefixValue = identifier
         } else {
-            prefixValue = "com.markbattistella.packages.defaultsKit.default."
+            prefixValue = "com.markbattistella.packages.defaultsKit."
         }
         return "\(prefixValue).defaults."
     }
