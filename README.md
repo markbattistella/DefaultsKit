@@ -40,7 +40,7 @@ dependencies: [
 Define keys by conforming your enums to `UserDefaultsKeyRepresentable`:
 
 ```swift
-enum UserDefaultsKeys: String, UserDefaultsKeyRepresentable {
+enum UserDefaultsKey: String, UserDefaultsKeyRepresentable {
     case userPreference
     case appTheme
     case userProfile
@@ -53,15 +53,15 @@ The `@DefaultsPersisted` property wrapper supports any `Codable` type:
 
 ```swift
 // For primitive types
-@DefaultsPersisted(UserDefaultsKeys.userPreference)
+@DefaultsPersisted(UserDefaultsKey.userPreference)
 var isEnabled: Bool = false
 
 // For custom types
-@DefaultsPersisted(UserDefaultsKeys.userProfile)
+@DefaultsPersisted(UserDefaultsKey.userProfile)
 var profile: UserProfile = UserProfile(name: "John", age: 30)
 
 // For optional values
-@DefaultsPersisted(UserDefaultsKeys.lastLoginDate)
+@DefaultsPersisted(UserDefaultsKey.lastLoginDate)
 var lastLogin: Date?
 ```
 
@@ -71,7 +71,7 @@ Use type-safe keys with SwiftUI's `@AppStorage`:
 
 ```swift
 struct ContentView: View {
-    @AppStorage(UserDefaultsKeys.userPreference)
+    @AppStorage(UserDefaultsKey.userPreference)
     var isEnabled: Bool = false
     
     var body: some View {
@@ -86,16 +86,16 @@ Use the extended `UserDefaults` methods:
 
 ```swift
 // Setting values
-UserDefaults.standard.set(true, for: UserDefaultsKeys.userPreference)
+UserDefaults.standard.set(true, for: UserDefaultsKey.userPreference)
 
 // Getting values
-let preference = UserDefaults.standard.bool(for: UserDefaultsKeys.userPreference)
+let preference = UserDefaults.standard.bool(for: UserDefaultsKey.userPreference)
 
 // Encoding complex objects
-try? UserDefaults.standard.encode(profile, for: UserDefaultsKeys.userProfile)
+try? UserDefaults.standard.encode(profile, for: UserDefaultsKey.userProfile)
 
 // Decoding complex objects
-let savedProfile: UserProfile? = try? UserDefaults.standard.decode(for: UserDefaultsKeys.userProfile)
+let savedProfile: UserProfile? = try? UserDefaults.standard.decode(for: UserDefaultsKey.userProfile)
 ```
 
 ## Managing Defaults
@@ -106,8 +106,8 @@ let savedProfile: UserProfile? = try? UserDefaults.standard.decode(for: UserDefa
 // Register defaults
 UserDefaults.standard.register(
     defaults: [
-        UserDefaultsKeys.appTheme: "light",
-        UserDefaultsKeys.userPreference: true
+        UserDefaultsKey.appTheme: "light",
+        UserDefaultsKey.userPreference: true
     ]
 )
 ```
@@ -115,11 +115,11 @@ UserDefaults.standard.register(
 ### Helper methods
 
 ```swift
-// Print all values from the UserDefaultsKeys enum
-UserDefaults.printAll(from: UserDefaultsKeys.self)
+// Print all values from the UserDefaultsKey enum
+UserDefaults.printAllKeys(from: UserDefaultsKey.self)
 
-// Delete all values in the UserDefaultsKeys enum
-UserDefaults.deleteAll(from: UserDefaultsKeys.self)
+// Delete all values in the UserDefaultsKey enum
+UserDefaults.deleteAllKeys(from: UserDefaultsKey.self)
 ```
 
 Using it this way allows you to segregate different `UserDefaultsKeyRepresentable` enums, and print or delete them.

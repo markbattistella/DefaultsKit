@@ -6,7 +6,7 @@
 
 import Foundation
 
-// MARK: - Setting
+// MARK: - Storing data
 
 extension UserDefaults {
 
@@ -20,7 +20,7 @@ extension UserDefaults {
     }
 }
 
-// MARK: - Deletion
+// MARK: - Deleing data
 
 extension UserDefaults {
 
@@ -32,7 +32,7 @@ extension UserDefaults {
     }
 }
 
-// MARK: - Getting Values
+// MARK: - Getting data
 
 extension UserDefaults {
 
@@ -123,99 +123,90 @@ extension UserDefaults {
     }
 }
 
-// MARK: - Setup Methods
+// MARK: - Registration
 
 extension UserDefaults {
 
+    /// Registers default values to UserDefaults for keys provided by the specified type.
+    ///
+    /// - Parameters:
+    ///   - defaults: A dictionary of keys and values to register as defaults in UserDefaults.
+    ///   - reset: A Boolean indicating whether to delete all keys that match the specified type's
+    ///   prefix before registering new defaults. Default value is `false`.
+    /// - Note: If `reset` is set to `true`, all existing keys that match the prefix will be
+    /// deleted before new defaults are registered.
     public func register<T: UserDefaultsKeyRepresentable>(
         defaults: [T: Any],
         reset: Bool = false
     ) {
-        guard let userDefaultsInstance = UserDefaults.getUserDefaultsInstance(from: T.self) else {
-            return
+        let instance = UserDefaults.getInstance(from: T.self)
+        if reset { UserDefaults.deleteAllKeys(for: T.self) }
+        let prefixedDefaults = defaults.reduce(into: [String: Any]()) { result, entry in
+            result[entry.key.value] = entry.value
         }
-        if reset {
-            UserDefaults.removeKeys(Array(defaults.keys), from: userDefaultsInstance)
-        }
-        var prefixedDefaults: [String: Any] = [:]
-        defaults.forEach { key, value in
-            prefixedDefaults[key.value] = value
-        }
-        userDefaultsInstance.register(defaults: prefixedDefaults)
+        instance.register(defaults: prefixedDefaults)
     }
 }
 
-// MARK: - Utility Methods - Print
+// MARK: - Utilities
 
 extension UserDefaults {
 
-    public static func printKeys<T: UserDefaultsKeyRepresentable>(of type: T.Type) {
-        processAllKeys(from: type) { userDefaultsInstance, key in
-            if let value = userDefaultsInstance.object(forKey: key) {
+    /// Prints all keys from UserDefaults that match the prefix provided by the specified type.
+    ///
+    /// - Parameter representable: A type conforming to `UserDefaultsKeyRepresentable` that
+    /// provides prefix and suite information.
+    /// - Note: This method iterates over all keys in the relevant `UserDefaults` instance and
+    /// prints those that match the specified prefix, along with their values.
+    public static func printAllKeys<T: UserDefaultsKeyRepresentable>(
+        for representable: T.Type
+    ) {
+        let instance = UserDefaults.getInstance(from: T.self)
+        let prefix = T.prefix
+        let allFilteredKeys = instance.dictionaryRepresentation().keys
+        allFilteredKeys.forEach { key in
+            if key.hasPrefix(prefix), let value = instance.object(forKey: key) {
                 print("\(key): \(value)")
             }
         }
     }
 
-    public static func printKeys<T: UserDefaultsKeyRepresentable>(_ keys: [T]) {
-        guard let userDefaultsInstance = getUserDefaultsInstance(from: T.self) else { return }
-        keys.forEach { key in
-            if let value = userDefaultsInstance.object(forKey: key.value) {
-                print("\(key.value): \(value)")
-            }
-        }
-    }
-}
-
-// MARK: - Utility Methods - Delete
-
-extension UserDefaults {
-    public static func deleteKeys<T: UserDefaultsKeyRepresentable>(of type: T.Type) {
-        processAllKeys(from: type) { userDefaultsInstance, key in
-            userDefaultsInstance.removeObject(forKey: key)
-        }
-    }
-
-    public static func deleteKeys<T: UserDefaultsKeyRepresentable>(_ keys: [T]) {
-        guard let userDefaultsInstance = getUserDefaultsInstance(from: T.self) else { return }
-        removeKeys(keys, from: userDefaultsInstance)
-    }
-}
-
-// MARK: - Helper methods
-
-extension UserDefaults {
-
-    private static func getUserDefaultsInstance<T: UserDefaultsKeyRepresentable>(
-        from suiteType: T.Type
-    ) -> UserDefaults? {
-        if let suiteName = suiteType.suiteName {
-            return UserDefaults(suiteName: suiteName)
-        } else {
-            return .standard
-        }
-    }
-
-    private static func processAllKeys<T: UserDefaultsKeyRepresentable>(
-        from suiteType: T.Type,
-        process: (UserDefaults, String) -> Void
+    /// Deletes all keys from UserDefaults that match the prefix provided by the specified type.
+    ///
+    /// - Parameter representable: A type conforming to `UserDefaultsKeyRepresentable` that
+    /// provides prefix and suite information.
+    /// - Note: This method deletes all keys whose names begin with the specified prefix in the
+    /// relevant `UserDefaults` instance.
+    public static func deleteAllKeys<T: UserDefaultsKeyRepresentable>(
+        for representable: T.Type
     ) {
-        guard let userDefaultsInstance = getUserDefaultsInstance(from: suiteType) else { return }
+        let instance = UserDefaults.getInstance(from: T.self)
         let prefix = T.prefix
-        let allKeys = userDefaultsInstance.dictionaryRepresentation().keys
-        allKeys.forEach { key in
+        let allFilteredKeys = instance.dictionaryRepresentation().keys
+        allFilteredKeys.forEach { key in
             if key.hasPrefix(prefix) {
-                process(userDefaultsInstance, key)
+                instance.removeObject(forKey: key)
             }
         }
     }
+}
 
-    private static func removeKeys<T: UserDefaultsKeyRepresentable>(
-        _ keys: [T],
-        from userDefaultsInstance: UserDefaults
-    ) {
-        keys.forEach { key in
-            userDefaultsInstance.removeObject(forKey: key.value)
+// MARK: - Helpers
+
+extension UserDefaults {
+
+    /// Retrieves an instance of UserDefaults based on the suite name of the provided type.
+    ///
+    /// - Parameter representable: A type conforming to `UserDefaultsKeyRepresentable` that
+    /// provides suite information.
+    /// - Returns: The corresponding `UserDefaults` instance, either the one with the specified
+    /// suite or the standard suite.
+    private static func getInstance<T: UserDefaultsKeyRepresentable>(
+        from representable: T.Type
+    ) -> UserDefaults {
+        if let suite = T.suiteName {
+            return UserDefaults(suiteName: suite)!
         }
+        return .standard
     }
 }
