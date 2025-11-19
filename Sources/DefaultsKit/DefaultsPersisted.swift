@@ -137,6 +137,7 @@ extension Optional: OptionalType {
 // MARK: - Convenience Initializers
 
 extension DefaultsPersisted where Value: ExpressibleByNilLiteral {
+
     /// Creates a new instance for optional values.
     public init(
         _ key: any UserDefaultsKeyRepresentable,

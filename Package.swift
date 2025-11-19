@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.2
 
 import PackageDescription
 
@@ -21,7 +21,11 @@ let package = Package(
     targets: [
         .target(
             name: "DefaultsKit",
-            resources: [.copy("PrivacyInfo.xcprivacy")]
+            resources: [.copy("PrivacyInfo.xcprivacy")],
+            swiftSettings: [
+                .enableExperimentalFeature("StrictConcurrency")
+            ]
+
         )
     ]
 )
