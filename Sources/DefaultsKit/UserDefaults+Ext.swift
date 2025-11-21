@@ -204,7 +204,7 @@ extension UserDefaults {
     private static func getInstance<T: UserDefaultsKeyRepresentable>(
         from representable: T.Type
     ) -> UserDefaults {
-        if let suite = T.suiteName {
+        if let suite = T.keyPrefix {
             return UserDefaults(suiteName: suite)!
         }
         return .standard

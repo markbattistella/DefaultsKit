@@ -6,55 +6,48 @@
 
 import Foundation
 
-/// A protocol to represent keys for `UserDefaults` that conform to `RawRepresentable` where the
-/// `RawValue` is of type `String`.
-///
-/// This protocol provides functionality to generate prefixed keys for `UserDefaults` to avoid
-/// conflicts, and optionally allows the use of a custom suite name.
+/// A type that represents a UserDefaults key using a `String` raw value. Conforming types gain
+/// automatic namespacing via an optional `keyPrefix` or, when absent, the app’s bundle
+/// identifier. This helps avoid key collisions and keeps UserDefaults storage organised.
 public protocol UserDefaultsKeyRepresentable: RawRepresentable where RawValue == String {
 
-    /// The name of the custom `UserDefaults` suite, if any.
-    ///
-    /// - Default: `nil` (uses the standard `UserDefaults` if not specified).
-    static var suiteName: String? { get }
+    /// An optional prefix applied to all keys for this conforming type. If `nil`, the bundle
+    /// identifier is used; if that is unavailable, a fallback prefix is applied.
+    static var keyPrefix: String? { get }
 }
-
-// MARK: - Default values
 
 extension UserDefaultsKeyRepresentable {
 
-    /// Default implementation for `suiteName` to return `nil`.
-    ///
-    /// Override this property in conforming types to specify a custom suite name.
-    public static var suiteName: String? {
+    /// The default implementation returns `nil`, allowing the prefix logic to fall back to the
+    /// bundle identifier or the fallback value.
+    public static var keyPrefix: String? {
         return nil
     }
 
-    /// Computed property to get the full key value with a prefix.
-    ///
-    /// This combines the type-specific prefix and the raw key value, ensuring unique keys in
-    /// `UserDefaults`.
+    /// The fully qualified UserDefaults key for this instance. Combines the calculated prefix
+    /// with the raw key value.
     internal var value: String {
         return "\(Self.prefix)\(rawValue)"
     }
 
-    /// Computed property to generate a prefix for the keys.
+    /// The resolved prefix used for all keys under this type.
     ///
-    /// The prefix is constructed as follows:
-    /// 1. If a `suiteName` is provided, use it.
-    /// 2. If the app's bundle identifier exists, use it.
-    /// 3. As a fallback, use a default value: `"com.markbattistella.packages.defaultsKit.default."`.
+    /// Priority:
+    /// 1. `keyPrefix` when provided
+    /// 2. App bundle identifier
+    /// 3. Fallback string
     ///
-    /// The resulting prefix ends with `.defaults.` to namespace the keys for `UserDefaults`.
+    /// The final prefix is trimmed and normalised before being appended.
     internal static var prefix: String {
         var prefixValue: String
-        if let suiteName = suiteName {
-            prefixValue = suiteName
+        if let keyPrefix {
+            prefixValue = keyPrefix
         } else if let identifier = Bundle.main.bundleIdentifier {
             prefixValue = identifier
         } else {
-            prefixValue = "com.markbattistella.packages.defaultsKit."
+            prefixValue = "com.markbattistella.packages.defaultsKit"
         }
+        prefixValue = prefixValue.trimmingCharacters(in: .init(charactersIn: "."))
         return "\(prefixValue).defaults."
     }
 }
