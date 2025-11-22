@@ -66,9 +66,7 @@ public struct DefaultsPersisted<Value: Codable> {
                             return try JSONDecoder().decode(Value.self, from: data)
                         }
                     } catch {
-                        print(
-                            "Error decoding value for key \(key.value): \(error.localizedDescription)"
-                        )
+                        print("Error decoding value for key \(key.value): \(error.localizedDescription)")
                     }
                     return defaultValue
             }

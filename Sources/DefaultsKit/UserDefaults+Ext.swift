@@ -161,6 +161,7 @@ extension UserDefaults {
     public static func printAllKeys<T: UserDefaultsKeyRepresentable>(
         for representable: T.Type
     ) {
+        #if DEBUG
         let instance = UserDefaults.getInstance(from: T.self)
         let prefix = T.prefix
         let allFilteredKeys = instance.dictionaryRepresentation().keys
@@ -169,6 +170,7 @@ extension UserDefaults {
                 print("\(key): \(value)")
             }
         }
+        #endif
     }
 
     /// Deletes all keys from UserDefaults that match the prefix provided by the specified type.
