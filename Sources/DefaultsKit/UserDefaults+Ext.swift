@@ -123,6 +123,16 @@ extension UserDefaults {
     }
 }
 
+// MARK: - Key Existence
+
+extension UserDefaults {
+
+    /// Returns true if a value exists for the given key.
+    public func exists(for key: any UserDefaultsKeyRepresentable) -> Bool {
+        self.object(forKey: key.value) != nil
+    }
+}
+
 // MARK: - Registration
 
 extension UserDefaults {
