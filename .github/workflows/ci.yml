@@ -35,5 +35,5 @@ jobs:
         run: |
           xcodebuild build \
             -scheme ${{ github.event.repository.name }} \
-            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 16' \
+            -destination 'generic/platform=iOS Simulator' \
             CODE_SIGNING_ALLOWED=NO
