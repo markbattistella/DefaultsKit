@@ -116,10 +116,10 @@ UserDefaults.standard.register(
 
 ```swift
 // Print all values from the UserDefaultsKey enum
-UserDefaults.printAllKeys(from: UserDefaultsKey.self)
+UserDefaults.printAllKeys(for: UserDefaultsKey.self)
 
 // Delete all values in the UserDefaultsKey enum
-UserDefaults.deleteAllKeys(from: UserDefaultsKey.self)
+UserDefaults.deleteAllKeys(for: UserDefaultsKey.self)
 ```
 
 Using it this way allows you to segregate different `UserDefaultsKeyRepresentable` enums, and print or delete them.

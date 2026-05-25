@@ -13,134 +13,148 @@ import Foundation
 @propertyWrapper
 public struct DefaultsPersisted<Value: Codable> {
 
-    private let key: any UserDefaultsKeyRepresentable
-    private let defaultValue: Value
-    private let defaults: UserDefaults
+  private let key: any UserDefaultsKeyRepresentable
+  private let defaultValue: Value
+  private let defaults: UserDefaults
 
-    public init(
-        wrappedValue: Value,
-        _ key: any UserDefaultsKeyRepresentable,
-        defaults: UserDefaults = .standard
-    ) {
-        self.defaultValue = wrappedValue
-        self.key = key
-        self.defaults = defaults
+  public init(
+    wrappedValue: Value,
+    _ key: any UserDefaultsKeyRepresentable,
+    defaults: UserDefaults = .standard
+  ) {
+    self.defaultValue = wrappedValue
+    self.key = key
+    self.defaults = defaults
+  }
+
+  public var wrappedValue: Value {
+
+    // MARK: Fetching the data
+
+    get {
+      // Handle primitive types first for better performance
+      switch Value.self {
+
+      case is Bool.Type:
+        guard defaults.exists(for: key) else { return defaultValue }
+        return defaults.bool(for: key) as! Value
+
+      case is Int.Type:
+        guard defaults.exists(for: key) else { return defaultValue }
+        return defaults.integer(for: key) as! Value
+
+      case is Double.Type:
+        guard defaults.exists(for: key) else { return defaultValue }
+        return defaults.double(for: key) as! Value
+
+      case is Float.Type:
+        guard defaults.exists(for: key) else { return defaultValue }
+        return defaults.float(for: key) as! Value
+
+      case is String.Type:
+        return (defaults.string(for: key) ?? defaultValue as! String) as! Value
+
+      case is Date.Type:
+        return (defaults.date(for: key) ?? defaultValue as! Date) as! Value
+
+      case is Data.Type:
+        return (defaults.data(for: key) ?? defaultValue as! Data) as! Value
+
+      case is URL.Type:
+        return (defaults.url(for: key) ?? defaultValue as! URL) as! Value
+
+      default:
+        // For all other Codable types, use JSON encoding/decoding
+        do {
+          if let data = defaults.data(for: key) {
+            return try JSONDecoder().decode(Value.self, from: data)
+          }
+        } catch {
+          print("Error decoding value for key \(key.value): \(error.localizedDescription)")
+        }
+        return defaultValue
+      }
     }
 
-    public var wrappedValue: Value {
+    // MARK: Storing the data
 
-        // MARK: Fetching the data
-
-        get {
-            // Handle primitive types first for better performance
-            switch Value.self {
-
-                case is Bool.Type:
-                    return defaults.bool(for: key) as! Value
-
-                case is Int.Type:
-                    return defaults.integer(for: key) as! Value
-
-                case is Double.Type:
-                    return defaults.double(for: key) as! Value
-
-                case is Float.Type:
-                    return defaults.float(for: key) as! Value
-
-                case is String.Type:
-                    return (defaults.string(for: key) ?? defaultValue as! String) as! Value
-
-                case is Date.Type:
-                    return (defaults.date(for: key) ?? defaultValue as! Date) as! Value
-
-                case is Data.Type:
-                    return (defaults.data(for: key) ?? defaultValue as! Data) as! Value
-
-                case is URL.Type:
-                    return (defaults.url(for: key) ?? defaultValue as! URL) as! Value
-
-                default:
-                    // For all other Codable types, use JSON encoding/decoding
-                    do {
-                        if let data = defaults.data(for: key) {
-                            return try JSONDecoder().decode(Value.self, from: data)
-                        }
-                    } catch {
-                        print("Error decoding value for key \(key.value): \(error.localizedDescription)")
-                    }
-                    return defaultValue
-            }
+    set {
+      // Optional types: nil removes the key; non-nil goes through JSON so the
+      // getter's JSON decoder path can read it back correctly for all wrapped types.
+      if let optional = newValue as? any OptionalType {
+        if optional.isNil {
+          defaults.remove(for: key)
+        } else {
+          do {
+            let data = try JSONEncoder().encode(newValue)
+            defaults.set(data, for: key)
+          } catch {
+            defaults.remove(for: key)
+          }
         }
+        return
+      }
 
-        // MARK: Storing the data
+      // Handle primitives first for better performance
+      switch newValue {
 
-        set {
-            // Handle optional values
-            if let optional = newValue as? OptionalType, optional.isNil {
-                defaults.remove(for: key)
-                return
-            }
+      case let value as Bool:
+        defaults.set(value, for: key)
 
-            // Handle primitives first for better performance
-            switch newValue {
+      case let value as Int:
+        defaults.set(value, for: key)
 
-                case let value as Bool:
-                    defaults.set(value, for: key)
+      case let value as Double:
+        defaults.set(value, for: key)
 
-                case let value as Int:
-                    defaults.set(value, for: key)
+      case let value as Float:
+        defaults.set(value, for: key)
 
-                case let value as Double:
-                    defaults.set(value, for: key)
+      case let value as String:
+        defaults.set(value, for: key)
 
-                case let value as Float:
-                    defaults.set(value, for: key)
+      case let value as Date:
+        defaults.set(value, for: key)
 
-                case let value as String:
-                    defaults.set(value, for: key)
+      case let value as Data:
+        defaults.set(value, for: key)
 
-                case let value as Date:
-                    defaults.set(value, for: key)
+      case let value as URL:
+        defaults.set(value, for: key)
 
-                case let value as Data:
-                    defaults.set(value, for: key)
-
-                case let value as URL:
-                    defaults.set(value, for: key)
-
-                default:
-                    // For all other Codable types, use JSON encoding
-                    do {
-                        let data = try JSONEncoder().encode(newValue)
-                        defaults.set(data, for: key)
-                    } catch {
-                        // If encoding fails, remove the value
-                        defaults.remove(for: key)
-                    }
-            }
+      default:
+        // For all other Codable types, use JSON encoding
+        do {
+          let data = try JSONEncoder().encode(newValue)
+          defaults.set(data, for: key)
+        } catch {
+          // If encoding fails, remove the value
+          defaults.remove(for: key)
         }
+      }
     }
+  }
 }
 
 // MARK: - Optional Support
 
 private protocol OptionalType {
-    var isNil: Bool { get }
+  var isNil: Bool { get }
 }
 
 extension Optional: OptionalType {
-    fileprivate var isNil: Bool { self == nil }
+  fileprivate var isNil: Bool { self == nil }
 }
 
 // MARK: - Convenience Initializers
 
 extension DefaultsPersisted where Value: ExpressibleByNilLiteral {
 
-    /// Creates a new instance for optional values.
-    public init(
-        _ key: any UserDefaultsKeyRepresentable,
-        defaults: UserDefaults = .standard
-    ) {
-        self.init(wrappedValue: nil, key, defaults: defaults)
-    }
+  /// Creates a new instance for optional values.
+  public init(
+    _ key: any UserDefaultsKeyRepresentable,
+    defaults: UserDefaults = .standard
+  ) {
+    self.init(wrappedValue: nil, key, defaults: defaults)
+  }
 }
