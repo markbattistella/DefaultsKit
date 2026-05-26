@@ -29,9 +29,13 @@ Add `DefaultsKit` to your Swift project using Swift Package Manager.
 
 ```swift
 dependencies: [
-  .package(url: "https://github.com/markbattistella/DefaultsKit", from: "1.0.0")
+  .package(url: "https://github.com/markbattistella/DefaultsKit", from: "26.2.21")
 ]
 ```
+
+### Requirements
+
+- Swift 6.0+
 
 ## Usage
 

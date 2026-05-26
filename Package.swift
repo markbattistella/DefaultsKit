@@ -28,7 +28,11 @@ let package = Package(
     ),
     .testTarget(
       name: "DefaultsKitTests",
-      dependencies: ["DefaultsKit"]
+      dependencies: ["DefaultsKit"],
+      swiftSettings: [
+        .swiftLanguageMode(.v6)
+      ]
     ),
-  ]
+  ],
+  swiftLanguageModes: [.v6]
 )

@@ -147,11 +147,23 @@ struct UserDefaultsExtTests {
   }
 
   @Test func deleteAllKeysRemovesPrefixedKeys() {
-    store.set(true, for: TestKey.boolValue)
-    store.set(1, for: TestKey.intValue)
+    let standard = UserDefaults.standard
     UserDefaults.deleteAllKeys(for: TestKey.self)
-    // Standard defaults are used by deleteAllKeys; values in our suite are independent
-    // — this verifies the method runs without crashing
+    defer { UserDefaults.deleteAllKeys(for: TestKey.self) }
+
+    standard.set(true, for: TestKey.boolValue)
+    standard.set(1, for: TestKey.intValue)
+
+    UserDefaults.deleteAllKeys(for: TestKey.self)
+
+    #expect(standard.exists(for: TestKey.boolValue) == false)
+    #expect(standard.exists(for: TestKey.intValue) == false)
+  }
+
+  @Test func genericValueReadsStoredObject() {
+    store.set("stored", for: TestKey.stringValue)
+    let value: String? = store.value(for: TestKey.stringValue)
+    #expect(value == "stored")
   }
 
   @Test func registerDefaultsApplied() {

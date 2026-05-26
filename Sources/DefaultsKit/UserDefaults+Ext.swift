@@ -20,7 +20,7 @@ extension UserDefaults {
   }
 }
 
-// MARK: - Deleing data
+// MARK: - Deleting data
 
 extension UserDefaults {
 
@@ -78,7 +78,7 @@ extension UserDefaults {
 
   /// Retrieve a generic value for a given key.
   public func value<Value>(for key: any UserDefaultsKeyRepresentable) -> Value? {
-    self.value(forKey: key.value) as? Value
+    self.object(forKey: key.value) as? Value
   }
 
   /// Retrieve an array for a given key.
