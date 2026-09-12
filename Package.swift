@@ -5,12 +5,12 @@ import PackageDescription
 let package = Package(
   name: "DefaultsKit",
   platforms: [
-    .iOS(.v14),
-    .macCatalyst(.v14),
-    .macOS(.v11),
-    .tvOS(.v14),
+    .iOS(.v15),
+    .macCatalyst(.v15),
+    .macOS(.v12),
+    .tvOS(.v15),
     .visionOS(.v1),
-    .watchOS(.v7),
+    .watchOS(.v9),
   ],
   products: [
     .library(
